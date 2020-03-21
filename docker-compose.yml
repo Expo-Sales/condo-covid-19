@@ -1,0 +1,91 @@
+version: "3"
+
+services:
+  condo-convid-19:
+    image: luanetdev/node-serverless
+    ports:
+      - 3000:3000
+      - 9229:9229
+    links:
+      - postgres
+      - localstack
+      - redis
+    depends_on:
+      - postgres
+      - localstack
+      - redis
+    volumes:
+      - ./src:/opt/app
+      - /opt/app/node_modules
+      - ./config/node/command.sh:/opt/app/command.sh
+    command: ["./command.sh"]
+    environment:
+      NODE_ENV: local
+    networks:
+      - developer
+
+  condo-convid-19-tests:
+    image: luanetdev/node-serverless
+    ports:
+      - 3000:3000
+      - 9229:9229
+    links:
+      - postgres
+      - localstack
+      - redis
+    depends_on:
+      - postgres
+      - localstack
+      - redis
+    volumes:
+      - ./src:/opt/app
+      - /opt/app/node_modules
+      - ./config/node/command-test.sh:/opt/app/command.sh
+    command: ["./command.sh"]
+    environment:
+      NODE_ENV: test
+    networks:
+      - developer
+
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: condo_convid19
+      POSTGRES_PASSWORD: condo_convid19
+      POSTGRES_DB: condo_convid19
+    networks:
+      - developer
+
+  localstack:
+    image: localstack/localstack:latest
+    environment:
+      - SERVICES=s3:4572,sqs:4576,sns:4575
+      - DEFAULT_REGION=us-east-2
+      - DATA_DIR=/tmp/localstack/data
+    ports:
+      - "4572:4572"
+      - "8080:8080"
+      - "4576:4576"
+      - "4575:4575"
+    networks:
+      - developer
+    volumes:
+      - "./.localstack:/tmp/localstack"
+
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - developer
+    environment:
+      - REDIS_PASSWORD=redis
+
+networks:
+  developer:
+
+volumes:
+  localstack-data:

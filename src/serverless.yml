@@ -1,0 +1,54 @@
+service: condo-convid-19
+
+frameworkVersion: '>=1.55.1 <2.0.0'
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-dotenv-plugin
+  - serverless-offline-scheduler
+  - serverless-plugin-warmup
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  timeout: 30
+  stage: ${opt:stage,'dev'}
+  region: ${self:custom.region.${self:provider.stage}}
+  websocketsApiName: chat-websockets
+  websocketsApiRouteSelectionExpression: $request.body.action
+  tracing:
+    apiGateway: true
+    lambda: true
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    packager: 'yarn'
+    excludeFiles: ./__tests__/**/*.test.js
+    includeModules:
+      forceInclude:
+        - sequelize
+        - pg
+        - pg-hstore
+      forceExclude:
+        - node-fetch
+
+  stages:
+    - dev
+    - homolog
+    - staging
+    - prod
+  stage:
+    dev: 'dev'
+    homolog: 'homolog'
+    staging: 'staging'
+    production: 'prod'
+  region:
+    dev: 'us-east-2'
+    homolog: 'us-east-2'
+    staging: 'us-east-2'
+    prod: 'us-east-2'
+
+functions:
+  graphql: ${file(./apis/graphql/config.yml):graphql}

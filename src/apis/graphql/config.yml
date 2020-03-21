@@ -1,0 +1,11 @@
+graphql:
+  handler: ./apis/graphql/handler.graphql
+  warmup: true
+  events:
+    - http:
+        path: /graphql
+        method: post
+        cors: true
+    - http:
+        path: /graphql
+        method: get
